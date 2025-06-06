@@ -1,0 +1,834 @@
+{
+  "createdAt": "2025-06-06T18:24:29.021Z",
+  "updatedAt": "2025-06-06T18:37:21.145Z",
+  "id": "y3piyiubsUagdHB3",
+  "name": "BackupGithub",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "5d3ba1e7-ba56-44ff-a94f-5eddbc375291",
+      "name": "n8n",
+      "type": "n8n-nodes-base.n8n",
+      "position": [
+        1220,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "n8nApi": {
+          "id": "Y4qUVRzdRRRyPm2p",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "id",
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "id": "0d481920-3584-42c4-95dd-15d2d6d342d7",
+      "name": "Find new workflows",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1440,
+        300
+      ],
+      "typeVersion": 3.1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "id, updatedAt",
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "id": "3dd2943f-b533-483f-adef-9419b93ac0b2",
+      "name": "Find updated workflows",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1440,
+        540
+      ],
+      "typeVersion": 3.1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "id": "51c39f45-2e32-4f05-a339-6d2e47b044ef",
+      "name": "Wait for GitHub create/edit file finished",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        3240,
+        400
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $('Define Local Variables').item.json.github_owner }}/{{ $('Define Local Variables').item.json.repo_name }}/pulls",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"title\": \"Automated PR for {{ $('Define Local Variables').item.json.branch_name }}\",\n\"body\": \"\",\n\"head\": \"{{ $('Define Local Variables').item.json.branch_name }}\",\n\"base\": \"main\"\n}",
+        "options": {}
+      },
+      "id": "07d275dc-9140-43a9-979d-185b1489823a",
+      "name": "Create new PR via GitHub API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3460,
+        400
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "575b2ca9-528f-421f-8352-073c916fcd63",
+              "name": "branch_name",
+              "type": "string",
+              "value": "=workflows_{{ $now.format('yyyy-MM-dd-hh-mm-ss')}}"
+            },
+            {
+              "id": "6f7a1168-1c55-4e50-b7d2-0868104ee1db",
+              "name": "github_owner",
+              "type": "string",
+              "value": "rafaelmguimaraes"
+            },
+            {
+              "id": "9c8cf8ba-9e64-4fb5-ba38-8429264c84dd",
+              "name": "repo_name",
+              "type": "string",
+              "value": "n8n-local-backup"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "65e41548-040f-446f-907c-f4079b4e057c",
+      "name": "Define Local Variables",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        380
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "list",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.github_owner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.repo_name }}"
+        },
+        "filePath": "workflows"
+      },
+      "id": "6bb39d4f-5aa7-4470-b682-1defb9e3b6c1",
+      "name": "Get all workflows on GitHub",
+      "type": "n8n-nodes-base.github",
+      "position": [
+        780,
+        600
+      ],
+      "webhookId": "481a47c9-57bf-4c5f-a9c8-7246190c4b3c",
+      "typeVersion": 1.1,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.github_owner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.repo_name }}"
+        },
+        "filePath": "={{ $json.path }}",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "id": "a4ec2bcb-3f98-46b7-96aa-eab24a7d401c",
+      "name": "Get content for each workflow",
+      "type": "n8n-nodes-base.github",
+      "position": [
+        1000,
+        600
+      ],
+      "webhookId": "bfb94e71-96eb-4fc3-9fe0-1b5255d48b53",
+      "typeVersion": 1.1,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.content.base64Decode() }}",
+        "options": {}
+      },
+      "id": "f69f788b-16ca-4ccd-8a9e-f5515c440b41",
+      "name": "Base64decode workflow content",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1220,
+        600
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "empty"
+      },
+      "id": "7a376e5e-8a63-4309-8e51-221217267bdb",
+      "name": "Wait for finished",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1660,
+        420
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "cec5563a-01dd-4372-882a-2114c8e476a7",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Find updated workflows').all() }}",
+              "rightValue": ""
+            },
+            {
+              "id": "fb800963-acc7-495f-8bf2-c29c3b3d0450",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Find new workflows').all() }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "65099ce1-734c-47d6-8c91-c747c0fe762b",
+      "name": "If there are any changes in workflows",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1880,
+        420
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {},
+      "id": "87ca361d-b40e-421a-ac9d-4486c010d5fe",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        2120,
+        700
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{ $('Define Local Variables').item.json.github_owner }}/{{ $('Define Local Variables').item.json.repo_name }}/git/refs",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ref\": \"refs/heads/{{ $('Define Local Variables').item.json.branch_name }}\",\n  \"sha\": \"{{ $json.object.sha }}\"\n}",
+        "options": {}
+      },
+      "id": "79de5770-0448-4670-a56b-de32673799e9",
+      "name": "Create new branch via GitHub API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2320,
+        420
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $('Define Local Variables').item.json.github_owner }}/{{ $('Define Local Variables').item.json.repo_name }}/git/ref/heads/main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "7c47f46a-641d-4511-aa0b-e9d1f167af07",
+      "name": "Get latest commit SHA on main  via GitHub API",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2100,
+        420
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "id": "015f825f-b95c-4a85-aacd-56a81fc5e76f",
+      "name": "Wait until branch created",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2540,
+        540
+      ],
+      "typeVersion": 3.1,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "id": "6bd978e2-3b94-484b-9164-dd68d14576e6",
+      "name": "Wait until branch created1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2540,
+        300
+      ],
+      "typeVersion": 3.1,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "835f2dab-de42-4c97-a747-47b23d55c990",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.id }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "db7fcdac-40fe-4097-a442-0fbe56060a04",
+      "name": "Filter empty data",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        2760,
+        300
+      ],
+      "notesInFlow": true,
+      "typeVersion": 2.2,
+      "notes": "Empty data can happen because 'Find new workflows' always output data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1d8312fd-5157-4058-823c-35f7574541fa",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.id }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1d5069d9-8d6a-41e8-8ddf-085c5c121d6c",
+      "name": "Filter empty data1",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        2760,
+        540
+      ],
+      "notesInFlow": true,
+      "typeVersion": 2.2,
+      "notes": "Empty data can happen because 'Find updated workflows' always output data"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.github_owner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.repo_name }}"
+        },
+        "filePath": "=workflows/{{ $json.id }}.json",
+        "fileContent": "={{ $json.toJsonString() }}",
+        "commitMessage": "=Add new workflow {{ $json.id }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "={{ $('Define Local Variables').item.json.branch_name }}"
+          }
+        }
+      },
+      "id": "86f309a5-1e36-4d47-9923-da95a7bf0d38",
+      "name": "Create new commit to add new workflow",
+      "type": "n8n-nodes-base.github",
+      "position": [
+        2980,
+        300
+      ],
+      "webhookId": "843c09e3-953a-40c4-a208-38acdd2ea466",
+      "typeVersion": 1.1,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.github_owner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Define Local Variables').item.json.repo_name }}"
+        },
+        "filePath": "=workflows/{{ $json.id }}.json",
+        "fileContent": "={{ $json.toJsonString() }}",
+        "commitMessage": "=Update workflow {{ $json.id }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "={{ $('Define Local Variables').item.json.branch_name }}"
+          }
+        }
+      },
+      "id": "d26c05a1-7248-4386-96df-394a4246a0d5",
+      "name": "Create new commit to update changed workflow",
+      "type": "n8n-nodes-base.github",
+      "position": [
+        2980,
+        540
+      ],
+      "webhookId": "843c09e3-953a-40c4-a208-38acdd2ea466",
+      "typeVersion": 1.1,
+      "credentials": {
+        "githubApi": {
+          "id": "ptAj6jY8ToBPcKQ1",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C08NZ6D9CRF",
+          "cachedResultName": "n8n-notifications"
+        },
+        "text": "=:firework: {{ $workflow.name }} executed succesfully. \nIt created a new <{{ $json.html_url }}|GitHub PR>.",
+        "otherOptions": {}
+      },
+      "id": "10d64334-d95f-46c7-a79e-9b90fd7e3c1f",
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        3680,
+        400
+      ],
+      "webhookId": "799530a9-9c2f-482e-9265-a2d58663223e",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {},
+      "id": "9c9e26a5-7a23-4d86-aa2f-61b3369cd525",
+      "name": "Click me to trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        360,
+        380
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Setup\n1. GitHub credentials: Add your GitHub API credentials in n8n.\n2. Slack integration: Connect your Slack Bot token if you want PR notifications.\n3. Repository details: Update github_owner, repo_name, and workflow directory path in the “Define Local Variables” node.\n4. n8n API key - [Check this doc](https://docs.n8n.io/api/authentication/)",
+        "height": 260,
+        "width": 280
+      },
+      "id": "551e7cb4-2fbd-46bb-9f9c-456bcee2e013",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        280,
+        40
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "Find new workflows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find updated workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter empty data": {
+      "main": [
+        [
+          {
+            "node": "Create new commit to add new workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for finished": {
+      "main": [
+        [
+          {
+            "node": "If there are any changes in workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter empty data1": {
+      "main": [
+        [
+          {
+            "node": "Create new commit to update changed workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find new workflows": {
+      "main": [
+        [
+          {
+            "node": "Wait until branch created1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Wait for finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Click me to trigger": {
+      "main": [
+        [
+          {
+            "node": "Define Local Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Local Variables": {
+      "main": [
+        [
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get all workflows on GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find updated workflows": {
+      "main": [
+        [
+          {
+            "node": "Wait for finished",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Wait until branch created",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait until branch created": {
+      "main": [
+        [
+          {
+            "node": "Filter empty data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait until branch created1": {
+      "main": [
+        [
+          {
+            "node": "Filter empty data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all workflows on GitHub": {
+      "main": [
+        [
+          {
+            "node": "Get content for each workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new PR via GitHub API": {
+      "main": [
+        [
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base64decode workflow content": {
+      "main": [
+        [
+          {
+            "node": "Find updated workflows",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Find new workflows",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get content for each workflow": {
+      "main": [
+        [
+          {
+            "node": "Base64decode workflow content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new branch via GitHub API": {
+      "main": [
+        [
+          {
+            "node": "Wait until branch created1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait until branch created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new commit to add new workflow": {
+      "main": [
+        [
+          {
+            "node": "Wait for GitHub create/edit file finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If there are any changes in workflows": {
+      "main": [
+        [
+          {
+            "node": "Get latest commit SHA on main  via GitHub API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for GitHub create/edit file finished": {
+      "main": [
+        [
+          {
+            "node": "Create new PR via GitHub API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new commit to update changed workflow": {
+      "main": [
+        [
+          {
+            "node": "Wait for GitHub create/edit file finished",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get latest commit SHA on main  via GitHub API": {
+      "main": [
+        [
+          {
+            "node": "Create new branch via GitHub API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "aa942adc-bdd1-4005-a847-874a783cf022",
+  "triggerCount": 0,
+  "tags": []
+}
