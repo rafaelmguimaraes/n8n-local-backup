@@ -1,0 +1,58 @@
+{
+  "createdAt": "2025-06-06T17:12:28.748Z",
+  "updatedAt": "2025-06-06T17:12:28.748Z",
+  "id": "Axzk1fb4qRd8eFd0",
+  "name": "HackerNews",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f70837aa-8c41-4cf2-a1b4-2dae09bfccdc",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "all",
+        "limit": 10,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.hackerNews",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "3a4fafc5-b2fe-48d3-b688-95135d3d383b",
+      "name": "Hacker News"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Hacker News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "65089701-8a84-45c1-a8de-f90c2451d721",
+  "triggerCount": 0,
+  "tags": []
+}
